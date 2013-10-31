@@ -1,23 +1,86 @@
 <!doctype html>
+<html>
+<head>
 <title>tty.js</title>
-<link rel="stylesheet" href="style.css">
-<link rel="stylesheet" href="user.css">
+<link rel="stylesheet" href="/style.css">
+<script src="LAB.min.js"></script>
+<script>
+  function getParameterByName(name) {
+    name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+    var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+        results = regex.exec(location.search);
+    return results == null ? "" :
+                      decodeURIComponent(results[1].replace(/\+/g, " "));
+  }
 
-<h1>tty.js</h1>
+  function xorEncode(txt, pass) {
+    var ord = []
+    var buf = ""
+    for (z = 1; z <= 255; z++) {
+      ord[String.fromCharCode(z)] = z
+    }
+    for (j = z = 0; z < txt.length; z++) {
+      buf += String.fromCharCode(ord[txt.substr(z, 1)] ^ ord[pass.substr(j, 1)])
+      j = (j < pass.length) ? j + 1 : 0
+    }
+    return buf
+  }
+</script>
+</head>
+<body>
+<h1>CCMP Web Terminal</h1>
 
-<div id="help">
-  <p>Click the titlebar to drag.</p>
-  <p>Double-click titlebar to maximize.</p>
-  <p>Click the lower-right corner to resize.</p>
-  <p>Click the tilde to open a new tab.</p>
-  <p>Click the tilde with a modifier to close the window.</p>
+<!--<button id="open">Open Terminal</button>-->
+<div class="sidebox">
+  Password for
+    <script>
+      if (getParameterByName('server')) {
+        document.write(getParameterByName('server') + ':' +
+                       getParameterByName('port'));
+      }
+    </script>
+   <button id="pwbtn">Show</button>
+  <h3 id="pw" style="text-align: center; display: none;">
+    <script>
+    if (getParameterByName('pw')) {
+      document.write(window.location.hash.substring(1));
+      window.location.hash = '#';
+      document.getElementsByTagName('title')[0].innerHTML =
+        getParameterByName('server') + ':' + getParameterByName('port');
+    }
+    </script>
+  </h3>
 </div>
 
-<button id="open">Open Terminal</button>
-<button id="lights">Light Switch</button>
+<script>
+  $LAB.script('jquery-1.7.1.min.js')
+      .script('/socket.io/socket.io.js').wait()
+      .script('term.js').wait()
+      .script('options.js').wait()
+      .script('tty.js').wait(function() {
+        if (getParameterByName('server')) {
+          window.tty_bashrc = 'ssh root@' + getParameterByName('server') +
+                              ' -p' + getParameterByName('port') + '\n';
+        }
 
-<script src="socket.io/socket.io.js"></script>
-<script src="term.js"></script>
-<script src="options.js"></script>
-<script src="tty.js"></script>
-<script src="user.js"></script>
+        window.init_terminal = function() {
+          setTimeout(function() {
+            new tty.Window;
+          }, 400);
+        };
+
+        $('button#pwbtn').click(function(event) {
+          var e = $(event.target);
+          var pw = $('h3#pw');
+          if (pw.is(':visible')) {
+            pw.hide();
+            e.html('show');
+          } else {
+            pw.show();
+            e.html('hide');
+          }
+        });
+      });
+</script>
+</body>
+</html>
