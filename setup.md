@@ -1,41 +1,50 @@
-0. install node modules
+# 1. make a copy of bash -> rbash
 
-./npm.sh
+```bash
+  cp /bin/bash /opt/rbash
+```
 
-1. make a copy of bash -> rbash
+# 2. as root add a guest user and setup its home
 
-cp /bin/bash /opt/rbash
+```bash
+  useradd guest -s /opt/rbash
+  mkdir -p /home/guest/bin
+  mkdir -p /home/guest/.ssh
+  touch -p /home/guest/.ssh/known_hosts
+  chown guest:guest /home/guest/.ssh/known_hosts
+```
 
-2. as root add a guest user and setup its home
+# 3. make the ssh client avaliable to him
 
-useradd guest -s /opt/rbash
-mkdir -p /home/guest/bin
-mkdir -p /home/guest/.ssh
-touch -p /home/guest/.ssh/known_hosts
-chown guest:guest /home/guest/.ssh/known_hosts
+```bash
+  ln -s /usr/bin/ssh /home/guest/bin/ssh
+```
 
-3. make the ssh client avaliable to him
+# 4. restrict him can only use the cmds in his realm
 
-ln -s /usr/bin/ssh /home/guest/bin/ssh
+```bash
+  echo 'export PATH=$HOME/bin' > /home/guest/.bashrc
+  chmod 755 /home/guest/.bashrc
+  chown root:root /home/guest/.bash_rc
+  ln -s /home/guest/.bashrc /home/guest/.bash_profile
+```
 
-4. restrict him can only use the cmds in his realm
-
-echo 'export PATH=$HOME/bin' > /home/guest/.bashrc
-chmod 755 /home/guest/.bashrc
-chown root:root /home/guest/.bash_rc
-ln -s /home/guest/.bashrc /home/guest/.bash_profile
-
-5. change gid & uid & home in config.json
+# 5. change gid & uid & home in config.json
 
 make it correct to be guest account
 
+```bash
   id guest
+```
 
-6. if not work, rebuild npms of tty.js 
+# 6. if not work, rebuild dependencies of tty.js 
 
-cd node_modules/tty.js
-rm -rf node_modules
-npm install express pty.js socket.io 
+```bash
+  npm rebuild
+```
 
+# 7. (optional) setup the nat mapping
 
-iptables -A OUTPUT -o eth1 -m owner --uid-owner 1002  -j DROP
+```bash
+  iptables -A OUTPUT -o eth1 -m owner --uid-owner 1002  -j DROP
+```
